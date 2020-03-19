@@ -1,0 +1,85 @@
+package com.example.csvSplit.readWrite;
+
+import com.example.csvSplit.data.BuyerInvoice;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.stereotype.Service;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
+import java.io.File;
+import java.io.FileNotFoundException;
+
+@Service
+@Qualifier(value = "XML")
+public class BuyerInvoiceXmlWriter implements BuyerInvoiceWriter {
+
+    @Override
+    public void write(File file, String[] headers, BuyerInvoice buyerInvoice) {
+
+        try  {
+            DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
+            DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
+            Document doc = dBuilder.newDocument();
+
+            Element rootElement = doc.createElementNS("https://www.taulia.com/invoice", "Invoices");
+            doc.appendChild(rootElement);
+            rootElement.appendChild(populateInvoiceData(headers, doc, buyerInvoice));
+
+            TransformerFactory transformerFactory = TransformerFactory.newInstance();
+            Transformer transformer = transformerFactory.newTransformer();
+
+            DOMSource source = new DOMSource(doc);
+            StreamResult streamResult = new StreamResult(file);
+
+            transformer.transform(source, streamResult);
+        } catch (ParserConfigurationException | TransformerException e) {
+            throw new IllegalArgumentException("Can not write file");
+        }
+    }
+
+    private Node populateInvoiceData(String[] headers, Document doc, BuyerInvoice buyerInvoice) {
+        Element invoice = doc.createElement("Invoice");
+
+        if (buyerInvoice.getBuyer() != null) {
+            invoice.appendChild(createNode(doc, headers[0], buyerInvoice.getBuyer()));
+        }
+        if (buyerInvoice.getImageName() != null) {
+            invoice.appendChild(createNode(doc, headers[1], buyerInvoice.getImageName()));
+        }
+        if (buyerInvoice.getDueDate() != null) {
+            invoice.appendChild(createNode(doc, headers[3], buyerInvoice.getBuyer()));
+        }
+        if (buyerInvoice.getNumber() != null) {
+            invoice.appendChild(createNode(doc, headers[4], buyerInvoice.getNumber()));
+        }
+        if (buyerInvoice.getAmount() != null) {
+            invoice.appendChild(createNode(doc, headers[5], buyerInvoice.getAmount().toString()));
+        }
+        if (buyerInvoice.getCurrency() != null) {
+            invoice.appendChild(createNode(doc, headers[6], buyerInvoice.getCurrency()));
+        }
+        if (buyerInvoice.getStatus() != null) {
+            invoice.appendChild(createNode(doc, headers[7], buyerInvoice.getStatus()));
+        }
+        if (buyerInvoice.getSupplier() != null) {
+            invoice.appendChild(createNode(doc, headers[8], buyerInvoice.getSupplier()));
+        }
+
+        return invoice;
+    }
+
+    private Node createNode(Document doc, String header, String value) {
+        Element node = doc.createElement(header);
+        node.appendChild(doc.createTextNode(value));
+        return node;
+    }
+}
