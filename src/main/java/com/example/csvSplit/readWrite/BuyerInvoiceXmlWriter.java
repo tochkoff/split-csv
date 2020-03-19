@@ -8,6 +8,7 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.xml.sax.SAXException;
 
+import javax.imageio.ImageIO;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -16,6 +17,7 @@ import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
+import java.awt.image.BufferedImage;
 import java.io.*;
 import java.util.Base64;
 
@@ -25,7 +27,7 @@ public class BuyerInvoiceXmlWriter implements BuyerInvoiceWriter {
 
     @Override
     public void write(File file, String[] headers, BuyerInvoice buyerInvoice) {
-        try  {
+        try {
             writeXml(file, headers, buyerInvoice);
             writeImage(buyerInvoice);
         } catch (ParserConfigurationException | TransformerException | IOException e) {
@@ -61,11 +63,23 @@ public class BuyerInvoiceXmlWriter implements BuyerInvoiceWriter {
         transformer.transform(source, streamResult);
     }
 
-    private void writeImage(BuyerInvoice buyerInvoice) throws IOException {
-        File fileToWrite = new File("invoiceImages\\" + buyerInvoice.getImageName() + ".txt");
+    private void writeImage(BuyerInvoice buyerInvoice) {
+        String image = buyerInvoice.getImage();
+        if (image != null && image.length() != 0) {
+            extractImage(buyerInvoice);
+        }
+    }
+
+    private void extractImage(BuyerInvoice buyerInvoice) {
+        String fileToWrite = "invoiceImages\\" + buyerInvoice.getImageName();
         byte[] decoded = Base64.getDecoder().decode(buyerInvoice.getImage());
-        try (OutputStream stream = new FileOutputStream(fileToWrite)) {
-            stream.write(decoded);
+        try (ByteArrayInputStream bis = new ByteArrayInputStream(decoded)) {
+            BufferedImage image = ImageIO.read(bis);
+            if (image != null) {
+                ImageIO.write(image, "png", new File(fileToWrite));
+            }
+        } catch (IOException e) {
+            throw new IllegalArgumentException("Can not write image.");
         }
     }
 
