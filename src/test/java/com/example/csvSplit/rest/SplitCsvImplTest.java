@@ -35,7 +35,7 @@ class SplitCsvImplTest {
 
     @Test
     public void shouldReturnMessageAboutDirectoryWhenCsvSplitIsInvoked() {
-        String result = sut.splitToCsv("csv.txt");
+        String result = sut.splitToCsv("invoices.csv");
         assertEquals("Created files are in directory csvFiles.", result);
     }
 
