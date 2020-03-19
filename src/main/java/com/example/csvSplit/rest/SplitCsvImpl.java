@@ -48,7 +48,7 @@ public class SplitCsvImpl implements SplitCsv{
                 Optional<BuyerInvoice> buyerInvoice = csvLineToBuyerInvoiceConverter.convert(line);
                 if (buyerInvoice.isPresent()) {
                     BuyerInvoice invoiceToWrite = buyerInvoice.get();
-                    File fileToWrite = new File("csvFiles\\" + invoiceToWrite.getBuyer() + "_" + invoiceToWrite.getNumber() + ".csv");
+                    File fileToWrite = new File("csvFiles\\" + invoiceToWrite.getBuyer() + ".csv");
                     csvWriter.write(fileToWrite, headers, buyerInvoice.get());
                 }
             }
@@ -75,7 +75,7 @@ public class SplitCsvImpl implements SplitCsv{
                 Optional<BuyerInvoice> buyerInvoice = csvLineToBuyerInvoiceConverter.convert(line);
                 if (buyerInvoice.isPresent()) {
                     BuyerInvoice invoiceToBeWritten = buyerInvoice.get();
-                    File fileToWrite = new File("xmlFiles\\" + invoiceToBeWritten.getBuyer() + "_" + invoiceToBeWritten.getNumber() + ".xml");
+                    File fileToWrite = new File("xmlFiles\\" + invoiceToBeWritten.getBuyer() + ".xml");
                     xmlWriter.write(fileToWrite, headers, invoiceToBeWritten);
                 }
             }

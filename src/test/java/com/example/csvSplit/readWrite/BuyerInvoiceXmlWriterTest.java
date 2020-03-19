@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Base64;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
@@ -26,6 +27,8 @@ class BuyerInvoiceXmlWriterTest {
         BuyerInvoice invoiceToBeWritten = mock(BuyerInvoice.class);
         when(invoiceToBeWritten.getBuyer()).thenReturn("buyer");
         when(invoiceToBeWritten.getNumber()).thenReturn("number");
+        when(invoiceToBeWritten.getImage()).thenReturn(Base64.getEncoder().encodeToString("encode".getBytes()));
+        when(invoiceToBeWritten.getImageName()).thenReturn("testImageFile.txt");
 
         File fileToWrite = new File("xmlFiles\\" + invoiceToBeWritten.getBuyer() + "_" + invoiceToBeWritten.getNumber() + ".xml");
         String[] headers = {"h1", "h2", "h3", "h4", "h5", "h6", "h7", "h8", "h9"};

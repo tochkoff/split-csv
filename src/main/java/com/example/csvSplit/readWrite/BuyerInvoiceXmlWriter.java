@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
+import org.xml.sax.SAXException;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -15,8 +16,8 @@ import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
-import java.io.File;
-import java.io.FileNotFoundException;
+import java.io.*;
+import java.util.Base64;
 
 @Service
 @Qualifier(value = "XML")
@@ -24,25 +25,47 @@ public class BuyerInvoiceXmlWriter implements BuyerInvoiceWriter {
 
     @Override
     public void write(File file, String[] headers, BuyerInvoice buyerInvoice) {
-
         try  {
-            DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
-            DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
-            Document doc = dBuilder.newDocument();
-
-            Element rootElement = doc.createElementNS("https://www.taulia.com/invoice", "Invoices");
-            doc.appendChild(rootElement);
-            rootElement.appendChild(populateInvoiceData(headers, doc, buyerInvoice));
-
-            TransformerFactory transformerFactory = TransformerFactory.newInstance();
-            Transformer transformer = transformerFactory.newTransformer();
-
-            DOMSource source = new DOMSource(doc);
-            StreamResult streamResult = new StreamResult(file);
-
-            transformer.transform(source, streamResult);
-        } catch (ParserConfigurationException | TransformerException e) {
+            writeXml(file, headers, buyerInvoice);
+            writeImage(buyerInvoice);
+        } catch (ParserConfigurationException | TransformerException | IOException e) {
             throw new IllegalArgumentException("Can not write file");
+        }
+    }
+
+    private void writeXml(File file, String[] headers, BuyerInvoice buyerInvoice) throws ParserConfigurationException, IOException, TransformerException {
+        DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
+        DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
+        Document doc;
+        Element rootElement;
+
+        try {
+            doc = dBuilder.parse(file);
+            rootElement = doc.getDocumentElement();
+        } catch (FileNotFoundException e) {
+            doc = dBuilder.newDocument();
+            rootElement = doc.createElementNS("https://www.taulia.com/invoice", "Invoices");
+            doc.appendChild(rootElement);
+        } catch (SAXException e) {
+            throw new IllegalArgumentException("Can not read file");
+        }
+
+        rootElement.appendChild(populateInvoiceData(headers, doc, buyerInvoice));
+
+        TransformerFactory transformerFactory = TransformerFactory.newInstance();
+        Transformer transformer = transformerFactory.newTransformer();
+
+        DOMSource source = new DOMSource(doc);
+        StreamResult streamResult = new StreamResult(file);
+
+        transformer.transform(source, streamResult);
+    }
+
+    private void writeImage(BuyerInvoice buyerInvoice) throws IOException {
+        File fileToWrite = new File("invoiceImages\\" + buyerInvoice.getImageName() + ".txt");
+        byte[] decoded = Base64.getDecoder().decode(buyerInvoice.getImage());
+        try (OutputStream stream = new FileOutputStream(fileToWrite)) {
+            stream.write(decoded);
         }
     }
 

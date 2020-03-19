@@ -17,12 +17,11 @@ public class BuyerInvoiceCsvWriter implements BuyerInvoiceWriter {
 
     @Override
     public void write(File file, String[] headers, BuyerInvoice buyerInvoice) {
-        try (BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file), StandardCharsets.UTF_8))) {
+        try (PrintWriter pw = new PrintWriter(new BufferedWriter(new FileWriter(file, true)))) {
             StringBuilder invoice = constructInvoice(headers, buyerInvoice);
-            bw.write(invoice.toString());
-            bw.newLine();
+            pw.write(invoice.toString());
 
-            bw.flush();
+            pw.flush();
         } catch (IOException e) {
             System.out.println("Can not write file");
         }
